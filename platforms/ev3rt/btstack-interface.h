@@ -18,6 +18,6 @@ extern const int     btstack_rfcomm_mtu;
 // TODO: Add bt_init(local_name, pin_code, mtu)
 
 uint32_t btstack_get_time(); // in milliseconds
-uint32_t btstack_runloop_sleep(uint32_t time); // in milliseconds
+void btstack_runloop_sleep(uint32_t time); // in milliseconds
 void rfcomm_channel_open_callback();
 void rfcomm_channel_close_callback();
