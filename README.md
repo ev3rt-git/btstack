@@ -1,3 +1,13 @@
+# BTstack for EV3RT
+
+This repository holds a fork of BTstack used by EV3RT, a real-time platform for LEGO Mindstorms EV3.
+
+## Modifications
+* Select init script of cc256x dynamically
+* printf-free
+
+The original README of BTstack is as follows.
+
 # Welcome to BTstack
 
 BTstack is [BlueKitchen's](http://bluekitchen-gmbh.com) implementation of the official Bluetooth stack. 

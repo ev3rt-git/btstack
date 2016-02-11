@@ -11,9 +11,14 @@
 
 // #define HAVE_BLE
 
-#define HAVE_HCI_DUMP
+// #define HAVE_HCI_DUMP
+#define hci_dump_packet(...)
 #define ENABLE_LOG_INFO 
 #define ENABLE_LOG_ERROR
+
+// Use syslog instead of printf
+void syslog(unsigned int prio, const char *format, ...);
+#define BTSTACK_PRINTF(format, ...) syslog(3U/*LOG_ERROR*/, format, ## __VA_ARGS__)
 
 #define HCI_ACL_PAYLOAD_SIZE 1021
 

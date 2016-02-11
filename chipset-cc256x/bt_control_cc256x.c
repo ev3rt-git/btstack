@@ -78,8 +78,11 @@
 
 
 // actual init script provided by seperate .c file
-extern const uint8_t  cc256x_init_script[];
-extern const uint32_t cc256x_init_script_size;
+//extern const uint8_t  cc256x_init_script[];
+//extern const uint32_t cc256x_init_script_size;
+const uint8_t *cc256x_init_script;
+uint32_t       cc256x_init_script_size;
+
 
 //
 static uint32_t init_script_offset  = 0;

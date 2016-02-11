@@ -15,6 +15,7 @@
 #include <btstack/sdp_util.h>
 #include <btstack/utils.h>
 
+#include "debug.h"
 #include "hci.h"
 #include "l2cap.h"
 #include "rfcomm.h"
@@ -25,6 +26,8 @@
 //#include "syssvc/serial.h"
 //#include "platform.h"
 #include "btstack-interface.h"
+#include "bluetooth_init_cc2560_2.44.c"
+#include "bluetooth_init_cc2560A_2.14.c"
 
 #define RFCOMM_SERVER_CHANNEL 1
 #define HEARTBEAT_PERIOD_MS 10
@@ -83,7 +86,7 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 
 		case HCI_EVENT_LINK_KEY_REQUEST:
 #if defined(DEBUG)
-			printf("HCI_EVENT_LINK_KEY_REQUEST \n");
+			log_info("HCI_EVENT_LINK_KEY_REQUEST \n");
 #endif
 			// link key request
 			bt_flip_addr(event_addr, &packet[2]);
@@ -93,7 +96,7 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 		case HCI_EVENT_PIN_CODE_REQUEST:
 			// inform about pin code request
 #if defined(DEBUG)
-			printf("Please enter PIN %s on remote device\n", BLUETOOTH_PIN_CODE);
+			log_info("Please enter PIN %s on remote device\n", BLUETOOTH_PIN_CODE);
 #endif
 			bt_flip_addr(event_addr, &packet[2]);
 			hci_send_cmd(&hci_pin_code_request_reply, &event_addr, strlen(ev3rt_bluetooth_pin_code), ev3rt_bluetooth_pin_code);
@@ -105,10 +108,36 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 			if (COMMAND_COMPLETE_EVENT(packet, hci_read_bd_addr)) {
 
 				bt_flip_addr(event_addr, &packet[6]);
-				printf("BD-ADDR: %s\n\r", bd_addr_to_str(event_addr));
+				log_info("BD-ADDR: %s\n\r", bd_addr_to_str(event_addr));
 				break;
 			}
 #endif
+            // Select initialization script by Link Manager Protocol (LMP) subversion
+            if (COMMAND_COMPLETE_EVENT(packet, hci_read_local_version_information)) {
+                // Reference: st_kim.c in ev3dev
+                uint16_t version = READ_BT_16(packet, 12);
+                uint16_t chip = (version & 0x7C00) >> 10;
+                uint16_t min_ver = (version & 0x007F);
+                uint16_t maj_ver = (version & 0x0380) >> 7;
+                if (version & 0x8000) maj_ver |= 0x0008;
+
+                extern const uint8_t *cc256x_init_script;
+                extern uint32_t cc256x_init_script_size;
+                if (chip == 6 && maj_ver == 2 && min_ver == 31) { // CC2560
+                    log_info("BT Chip: CC2560");
+                    cc256x_init_script = cc2560_init_script;
+                    cc256x_init_script_size = cc2560_init_script_size;
+                } else { // CC2560A as default
+                    if ((chip == 6 && maj_ver == 6 && min_ver == 15)) {
+                        log_info("BT Chip: CC2560A");
+                    } else log_error("Unknown BT HW ver 0x%x", version);
+                    cc256x_init_script = cc2560A_init_script;
+                    cc256x_init_script_size = cc2560A_init_script_size;
+                }
+
+                break;
+            }
+
 			break;
 
 		case RFCOMM_EVENT_INCOMING_CONNECTION:
@@ -116,7 +145,7 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 			bt_flip_addr(event_addr, &packet[2]);
 			rfcomm_channel_nr = packet[8];
 			rfcomm_channel_id = READ_BT_16(packet, 9);
-			printf("RFCOMM channel %u requested for %s\n\r", rfcomm_channel_nr, bd_addr_to_str(event_addr));
+			log_info("RFCOMM channel %u requested for %s\n\r", rfcomm_channel_nr, bd_addr_to_str(event_addr));
 			rfcomm_accept_connection_internal(rfcomm_channel_id); // Always accept
 //			if (memcmp(event_addr, host_addr, sizeof(bd_addr_t)) == 0 || true /* TODO: Always accept */) {
 //				syslog(LOG_DEBUG,
@@ -210,7 +239,7 @@ void bluetooth_spp_initialize(void){
     memset(spp_service_buffer, 0, sizeof(spp_service_buffer));
     service_record_item_t * service_record_item = (service_record_item_t *) spp_service_buffer;
     sdp_create_spp_service( (uint8_t*) &service_record_item->service_record, RFCOMM_SERVER_CHANNEL, "Serial Port Profile");
-//    printf("SDP service buffer size: %u\n\r", (uint16_t) (sizeof(service_record_item_t) + de_get_len((uint8_t*) &service_record_item->service_record)));
+//    log_info("SDP service buffer size: %u\n\r", (uint16_t) (sizeof(service_record_item_t) + de_get_len((uint8_t*) &service_record_item->service_record)));
     sdp_register_service_internal(NULL, service_record_item);
 }
 

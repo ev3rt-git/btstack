@@ -22,7 +22,6 @@ ALL_OBJS += run_loop.o           \
 	hci.o                        \
 	utils.o                      \
 	btstack_memory.o             \
-	hci_dump.o                   \
 	hci_cmds.o					 \
 	rfcomm.o					 \
 	l2cap.o						 \
@@ -63,7 +62,7 @@ PATHS += ${BTSTACK_ROOT}/include/btstack
 all: $(LIBRARY_FILE)
 
 clean:
-	rm -f ${ALL_OBJS}
+	rm -f ${ALL_OBJS} dummy dummy.o
 
 realclean: clean
 	rm -f ${LIBRARY_FILE}
@@ -71,10 +70,8 @@ realclean: clean
 update_version:
 	${BTSTACK_ROOT}/tools/get_version.sh 
 
-install: update_version
-	rm -rf ${ARDUINO_LIBS}
-	mkdir ${ARDUINO_LIBS}
-	cp -r ${PATHS} ${ARDUINO_LIBS}
+dummy: update_version dummy.o $(ALL_OBJS)
+	$(CC) -o dummy dummy.o $(ALL_OBJS)
 
 $(LIBRARY_FILE): update_version $(ALL_OBJS)
 	#rm -f $@

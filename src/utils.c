@@ -108,6 +108,7 @@ char char_for_nibble(int nibble){
     return '?';
 }
 
+#if 0 // printf-free
 void printf_hexdump(const void *data, int size){
     if (size <= 0) return;
     int i;
@@ -116,6 +117,7 @@ void printf_hexdump(const void *data, int size){
     }
     printf("\n");
 }
+#endif
 
 void hexdump(const void *data, int size){
 #ifdef ENABLE_LOG_INFO
@@ -146,6 +148,7 @@ void hexdump(const void *data, int size){
 #endif
 }
 
+#if 0 // printf-free
 void hexdumpf(const void *data, int size){
     char buffer[6*16+1];
     int i, j;
@@ -172,12 +175,14 @@ void hexdumpf(const void *data, int size){
         printf("%s\n", buffer);
     }
 }
+#endif
 
 void log_key(const char * name, sm_key_t key){
     log_info("%-6s ", name);
     hexdump(key, 16);
 }
 
+#if 0 // printf-free
 static char uuid128_to_str_buffer[32+4+1];
 char * uuid128_to_str(uint8_t * uuid){
     sprintf(uuid128_to_str_buffer, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
@@ -188,6 +193,7 @@ char * uuid128_to_str(uint8_t * uuid){
 void printUUID128(uint8_t *uuid) {
     printf("%s", uuid128_to_str(uuid));
 }
+#endif
 
 static char bd_addr_to_str_buffer[6*3];  // 12:45:78:01:34:67\0
 char * bd_addr_to_str(bd_addr_t addr){
@@ -217,11 +223,13 @@ char *link_key_to_str(link_key_t link_key){
     return (char *) link_key_to_str_buffer;
 }
 
+#if 0 // snprintf-free
 static char link_key_type_to_str_buffer[2];
 char *link_key_type_to_str(link_key_type_t link_key){
     snprintf(link_key_type_to_str_buffer, sizeof(link_key_type_to_str_buffer), "%d", link_key);
     return (char *) link_key_type_to_str_buffer;
 }
+#endif
 
 void print_bd_addr( bd_addr_t addr){
     log_info("%s", bd_addr_to_str(addr));

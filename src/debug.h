@@ -66,7 +66,7 @@ static inline void __log_unused(const char *format, ...) {
 #define BTSTACK_PRINTF(format, ...)          printf_P(PSTR(format), ## __VA_ARGS__)
 #else
 #define HCI_DUMP_LOG(log_level, format, ...) hci_dump_log(log_level, format, ## __VA_ARGS__)
-#define BTSTACK_PRINTF(format, ...)          printf(format, ## __VA_ARGS__)
+//#define BTSTACK_PRINTF(format, ...)          printf(format, ## __VA_ARGS__)
 #endif
 
 #ifdef ENABLE_LOG_DEBUG
