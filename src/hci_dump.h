@@ -78,10 +78,12 @@ void hci_dump_open(const char *filename, hci_dump_format_t format);
  */
 void hci_dump_set_max_packets(int packets); // -1 for unlimited
 
+#if !defined(hci_dump_packet)
 /*
  * @brief 
  */
 void hci_dump_packet(uint8_t packet_type, uint8_t in, uint8_t *packet, uint16_t len);
+#endif
 
 /*
  * @brief 

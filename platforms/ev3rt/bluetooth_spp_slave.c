@@ -20,6 +20,7 @@
 #include "l2cap.h"
 #include "rfcomm.h"
 #include "sdp.h"
+#include "bt_control_cc256x.h"
 
 //#include "driver_common.h"
 //#include "kernel_cfg.h"

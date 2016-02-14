@@ -18,7 +18,7 @@ ALL_OBJS += run_loop.o           \
 	linked_list.o 				 \
 	bt_control_cc256x.o 		 \
     hci_transport_h4_dma.o       \
-	remote_device_db_memory.o    \
+	remote_device_db.o           \
 	hci.o                        \
 	utils.o                      \
 	btstack_memory.o             \
@@ -38,6 +38,7 @@ ALL_OBJS += run_loop.o           \
 # Include header and source files
 #
 CFLAGS += -I${BTSTACK_ROOT}/include \
+		  -I${BTSTACK_ROOT}/chipset-cc256x \
 		  -I${BTSTACK_ROOT}/src \
 		  -I.
 SRCDIRS = ${BTSTACK_ROOT}/src \
@@ -74,12 +75,7 @@ dummy: update_version dummy.o $(ALL_OBJS)
 	$(CC) -o dummy dummy.o $(ALL_OBJS)
 
 $(LIBRARY_FILE): update_version $(ALL_OBJS)
-	#rm -f $@
-	#$(AR) -rcs $@ $^
 	$(AR) -rcs $@ $(ALL_OBJS)
-	#cp -r ${PATHS} ${BTSTACK_PACKAGE}
-	#rm -f ${ARCHIVE}
-	#cp ${ARCHIVE} btstack-arduino-latest.zip
 
 $(ALL_OBJS): %.o: %.c
 	$(CC) -c $(CFLAGS) $<

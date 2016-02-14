@@ -59,6 +59,7 @@
 
 #include "run_loop_private.h"
 #include "debug.h"
+#include "btstack-interface.h"
 
 //#include <stddef.h> // NULL
 
