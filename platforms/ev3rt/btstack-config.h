@@ -13,7 +13,7 @@
 
 // #define HAVE_HCI_DUMP
 #define hci_dump_packet(...)
-#define ENABLE_LOG_INFO 
+// #define ENABLE_LOG_INFO 
 #define ENABLE_LOG_ERROR
 
 // Use syslog instead of printf

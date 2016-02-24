@@ -78,7 +78,11 @@ static uint16_t sdp_response_size = 0;
 
 void sdp_init(void){
     // register with l2cap psm sevices - max MTU
+#if 1 // Enforce GAP security level 1 for SDP to support Windows 8. -- ertl-liyixiao
+    l2cap_register_service_internal(NULL, sdp_packet_handler, PSM_SDP, 0xffff, LEVEL_1);
+#else // Original
     l2cap_register_service_internal(NULL, sdp_packet_handler, PSM_SDP, 0xffff, LEVEL_0);
+#endif
 }
 
 // register packet handler
