@@ -125,12 +125,12 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
                 extern const uint8_t *cc256x_init_script;
                 extern uint32_t cc256x_init_script_size;
                 if (chip == 6 && maj_ver == 2 && min_ver == 31) { // CC2560
-                    log_info("BT Chip: CC2560");
+                    log_error("BT Chip: CC2560");
                     cc256x_init_script = cc2560_init_script;
                     cc256x_init_script_size = cc2560_init_script_size;
                 } else { // CC2560A as default
                     if ((chip == 6 && maj_ver == 6 && min_ver == 15)) {
-                        log_info("BT Chip: CC2560A");
+                        log_error("BT Chip: CC2560A");
                     } else log_error("Unknown BT HW ver 0x%x", version);
                     cc256x_init_script = cc2560A_init_script;
                     cc256x_init_script_size = cc2560A_init_script_size;
