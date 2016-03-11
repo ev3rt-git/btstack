@@ -5,6 +5,8 @@
  */
 
 void bluetooth_task(intptr_t);
+void btstack_db_cache_put(const char *key, const char *value); // Put a data into database cache
+void btstack_db_cache_flush(); // Flush the database cache
 
 /**
  * Required interface
@@ -22,7 +24,6 @@ void btstack_runloop_sleep(uint32_t time); // in milliseconds
 void rfcomm_channel_open_callback();
 void rfcomm_channel_close_callback();
 
-#define BTSTACK_DB_KEY_SIZE (32)
-#define BTSTACK_DB_VAL_SIZE (64)
-int  btstack_db_get(const char *key, char *value_buf);
-void btstack_db_put(const char *key, const char *value);
+void btstack_db_lock();   // Lock database
+void btstack_db_unlock(); // Unload database
+void btstack_db_modify(const char *key, const char *value); // Modify data, (key && !value) means delete an entry, (!key) means clean entire database
