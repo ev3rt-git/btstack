@@ -116,27 +116,23 @@ static void dbstr_to_memory(uint8_t *dst, const char *src) {
 }
 
 
-static void btstack_db_modify_linkkey(db_mem_device_link_key_t *item, bool delete) {
+static void btstack_db_append_linkkey(db_mem_device_link_key_t *item) {
     char bd_addr_str[BD_ADDR_STRLEN + 1];
     char linkkey_str[LINKKEY_STRLEN + 1];
     memory_to_dbstr(bd_addr_str, item->device.bd_addr, BD_ADDR_LEN);
-    if (delete) {
-        btstack_db_modify(bd_addr_str, NULL);
-        return;
-    }
 	memory_to_dbstr(linkkey_str, &(item->link_key_type), 1);
 	memory_to_dbstr(linkkey_str + 3, item->link_key, LINK_KEY_LEN);
 	linkkey_str[2] = '/';
-    btstack_db_modify(bd_addr_str, linkkey_str);
+    btstack_db_append(bd_addr_str, linkkey_str);
 }
 
 void btstack_db_cache_flush() {
     linked_item_t *it;
 
     btstack_db_lock();
-    btstack_db_modify(NULL, NULL);
+    btstack_db_append(NULL, NULL);
     for (it = (linked_item_t *) db_mem_link_keys; it ; it = it->next){
-        btstack_db_modify_linkkey((db_mem_device_link_key_t *)it, false);
+        btstack_db_append_linkkey((db_mem_device_link_key_t *)it);
     }
     btstack_db_unlock();
 }
@@ -169,8 +165,6 @@ static void delete_link_key(bd_addr_t bd_addr){
     
     if (!item) return;
 
-    btstack_db_modify_linkkey((db_mem_device_link_key_t*)item, true);
-    
     linked_list_remove(&db_mem_link_keys, (linked_item_t *) item);
     btstack_memory_db_mem_device_link_key_free((db_mem_device_link_key_t*)item);
 }
@@ -179,9 +173,10 @@ static void delete_link_key_and_sync(bd_addr_t bd_addr){
     btstack_db_lock();
     delete_link_key(bd_addr);
     btstack_db_unlock();
+    btstack_db_cache_flush();
 }
 
-static void put_link_key(bd_addr_t bd_addr, link_key_t link_key, link_key_type_t link_key_type, bool modify_db){
+static void put_link_key(bd_addr_t bd_addr, link_key_t link_key, link_key_type_t link_key_type){
 
     // check for existing record and remove if found
     db_mem_device_link_key_t * record = (db_mem_device_link_key_t *) get_item(db_mem_link_keys, bd_addr);
@@ -198,7 +193,6 @@ static void put_link_key(bd_addr_t bd_addr, link_key_t link_key, link_key_type_t
     if (!record){
         record = (db_mem_device_link_key_t*)linked_list_get_last_item(&db_mem_link_keys);
         if (record) {
-            btstack_db_modify_linkkey(record, true);
             linked_list_remove(&db_mem_link_keys, (linked_item_t*) record);
         }
     }
@@ -212,14 +206,13 @@ static void put_link_key(bd_addr_t bd_addr, link_key_t link_key, link_key_type_t
     memcpy(record->link_key, link_key, LINK_KEY_LEN);
     record->link_key_type = link_key_type;
     linked_list_add(&db_mem_link_keys, (linked_item_t *) record);
-
-    if (modify_db) btstack_db_modify_linkkey(record, false);
 }
 
 static void put_link_key_and_sync(bd_addr_t bd_addr, link_key_t link_key, link_key_type_t link_key_type){
     btstack_db_lock();
-    put_link_key(bd_addr, link_key, link_key_type, true);
+    put_link_key(bd_addr, link_key, link_key_type);
     btstack_db_unlock();
+    btstack_db_cache_flush();
 }
 
 void btstack_db_cache_put(const char *key, const char *value) {
@@ -234,7 +227,7 @@ void btstack_db_cache_put(const char *key, const char *value) {
         dbstr_to_memory(&link_key_type, link_key_type_str);
 
         btstack_db_lock();
-        put_link_key(bd_addr, link_key, link_key_type, false);
+        put_link_key(bd_addr, link_key, link_key_type);
         btstack_db_unlock();
 #if defined(DEBUG_BTSTACK)
         log_error("%s(): addr 0x%08x%04x, link_key_type %d", __FUNCTION__, (bd_addr[0] << 24L) | (bd_addr[1] << 16L) | (bd_addr[2] << 8L) | bd_addr[3], (bd_addr[4] << 8L) | bd_addr[5], link_key_type);

@@ -26,4 +26,4 @@ void rfcomm_channel_close_callback();
 
 void btstack_db_lock();   // Lock database
 void btstack_db_unlock(); // Unload database
-void btstack_db_modify(const char *key, const char *value); // Modify data, (key && !value) means delete an entry, (!key) means clean entire database
+void btstack_db_append(const char *key, const char *value); // Append data, (!key) means clean entire database
