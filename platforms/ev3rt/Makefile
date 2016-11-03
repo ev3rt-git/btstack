@@ -16,6 +16,7 @@ LIBRARY_FILE=libBTstack.a
 ALL_OBJS += run_loop.o           \
 	run_loop_toppers.o			 \
 	linked_list.o 				 \
+	bnep.o					     \
 	bt_control_cc256x.o 		 \
     hci_transport_h4_dma.o       \
 	remote_device_db.o           \
@@ -23,6 +24,7 @@ ALL_OBJS += run_loop.o           \
 	utils.o                      \
 	btstack_memory.o             \
 	hci_cmds.o					 \
+	pan.o						 \
 	rfcomm.o					 \
 	l2cap.o						 \
 	l2cap_signaling.o			 \

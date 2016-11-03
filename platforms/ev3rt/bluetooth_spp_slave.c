@@ -210,6 +210,8 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
     }
 }
 
+#include "panu.c"
+
 void bluetooth_spp_initialize(void){
     hci_discoverable_control(1);
     hci_set_class_of_device(0x800804); // Information + Toy + Robot, http://bluetooth-pentest.narod.ru/software/bluetooth_class_of_device-service_generator.html
@@ -242,6 +244,8 @@ void bluetooth_spp_initialize(void){
     sdp_create_spp_service( (uint8_t*) &service_record_item->service_record, RFCOMM_SERVER_CHANNEL, "Serial Port Profile");
 //    log_info("SDP service buffer size: %u\n\r", (uint16_t) (sizeof(service_record_item_t) + de_get_len((uint8_t*) &service_record_item->service_record)));
     sdp_register_service_internal(NULL, service_record_item);
+
+    panu_setup();
 }
 
 void bluetooth_task(intptr_t unused) {
