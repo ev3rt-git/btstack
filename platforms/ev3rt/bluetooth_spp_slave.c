@@ -248,6 +248,17 @@ void bluetooth_spp_initialize(void){
     panu_setup();
 }
 
+static const hci_uart_config_t hci_uart_config_cc256x = {
+    NULL,
+    115200,
+    1875000,
+    0
+};
+
+static void hw_err_cb() {
+    log_error("!!!!BLUETOOTH HARDWARE ERROR!!!!\n");
+}
+
 void bluetooth_task(intptr_t unused) {
     log_debug("[bluetooth] Start main task.");
 
@@ -256,9 +267,10 @@ void bluetooth_task(intptr_t unused) {
     // Initialize HCI
     bt_control_t             *control   = bt_control_cc256x_instance();
 	hci_transport_t          *transport = hci_transport_h4_dma_instance();
-	hci_uart_config_t        *config    = hci_uart_config_cc256x_instance();
+	hci_uart_config_t        *config    = &hci_uart_config_cc256x;
 	const remote_device_db_t *db        = &remote_device_db_memory;
 	hci_init(transport, config, control, db);
+    hci_set_hardware_error_callback(hw_err_cb);
 
     // Initialize SPP (Serial Port Profile)
     bluetooth_spp_initialize();

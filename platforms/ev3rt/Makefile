@@ -9,7 +9,7 @@ DUMMY=$(shell )
 # Tools
 GCC_TARGET = arm-none-eabi
 AR = $(GCC_TARGET)-ar
-CC = $(GCC_TARGET)-gcc -nostdlib -std=gnu99 -fno-strict-aliasing -mcpu=arm926ej-s -mlittle-endian
+CC = $(GCC_TARGET)-gcc -O2 -nostdlib -std=gnu99 -fno-strict-aliasing -mcpu=arm926ej-s -mlittle-endian
 
 LIBRARY_FILE=libBTstack.a
 

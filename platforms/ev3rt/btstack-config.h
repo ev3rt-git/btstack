@@ -1,6 +1,9 @@
 #ifndef __BTSTACK_CONFIG
 #define __BTSTACK_CONFIG
 
+#include <stdint.h>
+#include "btstack-interface.h"
+
 #define EMBEDDED
 
 // #define HAVE_INIT_SCRIPT
