@@ -4,7 +4,7 @@
  * Provided interface
  */
 
-void bluetooth_task(intptr_t);
+void btstack_task(intptr_t);
 void btstack_db_cache_put(const char *key, const char *value); // Put a data into database cache
 void btstack_db_cache_flush(); // Flush the database cache
 

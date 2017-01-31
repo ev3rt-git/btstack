@@ -280,7 +280,7 @@ static void hw_err_cb() {
     log_error("!!!!BLUETOOTH HARDWARE ERROR!!!!\n");
 }
 
-void bluetooth_task(intptr_t unused) {
+void btstack_task(intptr_t unused) {
     log_debug("[bluetooth] Start main task.");
 
     run_loop_init(RUN_LOOP_EMBEDDED);
