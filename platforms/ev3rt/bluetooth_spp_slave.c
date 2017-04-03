@@ -266,7 +266,7 @@ void bluetooth_spp_initialize(void){
 //    log_info("SDP service buffer size: %u\n\r", (uint16_t) (sizeof(service_record_item_t) + de_get_len((uint8_t*) &service_record_item->service_record)));
     sdp_register_service_internal(NULL, service_record_item);
 
-    panu_setup();
+    if (!(*ev3rt_bluetooth_pan_disabled)) panu_setup();
 }
 
 static const hci_uart_config_t hci_uart_config_cc256x = {

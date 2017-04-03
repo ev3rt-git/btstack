@@ -5,6 +5,8 @@ static uint16_t bnep_cid            = 0;
 
 static uint8_t network_buffer[BNEP_MTU_MIN];
 static size_t  network_buffer_len = 0;
+static uint8_t network_buffer2[BNEP_MTU_MIN];
+static size_t  network_buffer_len2 = 0;
 
 static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size)
 {
@@ -59,6 +61,7 @@ static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_
                  */
                 case BNEP_EVENT_CHANNEL_CLOSED:
                 	log_error("BNEP channel closed\n");
+                    bnep_cid = 0;
                     // TODO: close a net I/F
                 	// run_loop_remove_data_source(&tap_dev_ds);
                     break;
@@ -80,7 +83,8 @@ static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_
          * It is forwarded to the TAP interface.
          */
         case BNEP_DATA_PACKET:
-        	log_error("recv a packet, size %d bytes", size);
+//        	log_error("recv a packet, size %d bytes", size);
+        	bnep_channel_receive_callback(packet, size);
             break;
 
         default:
@@ -88,18 +92,59 @@ static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_
     }
 }
 
+// TODO: rename
+static int process_tap_dev_data(struct data_source *ds)
+{
+    if (network_buffer_len > 0 && bnep_cid!=0 && bnep_can_send_packet_now(bnep_cid)) { // FIXME: check channel open?
+ //       	log_error("send a packet, size %d bytes", network_buffer_len);
+        bnep_send(bnep_cid, network_buffer, network_buffer_len);
+        network_buffer_len = 0;  // FIXME: use mutex?
+    }
+    if (network_buffer_len2 > 0 && bnep_cid!=0 && bnep_can_send_packet_now(bnep_cid)) { // FIXME: check channel open?
+//        	log_error("send a packet, size %d bytes", network_buffer_len2);
+        bnep_send(bnep_cid, network_buffer2, network_buffer_len2);
+        network_buffer_len2 = 0;  // FIXME: use mutex?
+    }
+    return 0;
+}
+
+uint8_t/*FIXME:use bool*/ bnep_channel_send(uint8_t *packet, uint16_t size) {
+//        	log_error("LWIP try to send a packet, size %d bytes", size);
+    if(size > BNEP_MTU_MIN) {
+        log_error("%s(): size too large", __FUNCTION__);
+    }
+    if (network_buffer_len == 0) {
+        memcpy(network_buffer, packet, size);
+        network_buffer_len = size; // FIXME: use mutex?
+    } else if (network_buffer_len2 == 0) {
+        memcpy(network_buffer2, packet, size);
+        network_buffer_len2 = size; // FIXME: use mutex?
+    } else {
+        log_error("%s(): buffer is not empty", __FUNCTION__);
+    }
+    return 1/*use true*/;
+}
+
 static void panu_setup(void){
     // Initialise BNEP
     bnep_init();
     bnep_register_packet_handler(panu_packet_handler);
     // Minimum L2CAP MTU for bnep is 1691 bytes
-    bnep_register_service(NULL, SDP_PANU, BNEP_MTU_MIN);
+    bnep_register_service(NULL, SDP_NAP/*SDP_PANU*/, BNEP_MTU_MIN);
     // Register SDP
-    static uint8_t panu_sdp_record[200];
+    static uint8_t panu_sdp_record[256];
     service_record_item_t * service_record_item = (service_record_item_t *) panu_sdp_record;
 #define NETWORK_TYPE_IPv4       0x0800
 #define NETWORK_TYPE_ARP        0x0806
     uint16_t network_packet_types[] = { NETWORK_TYPE_IPv4, NETWORK_TYPE_ARP, 0};    // 0 as end of list
-    pan_create_panu_service((uint8_t*) &service_record_item->service_record, network_packet_types, NULL, NULL, BNEP_SECURITY_NONE);
+    //pan_create_panu_service((uint8_t*) &service_record_item->service_record, network_packet_types, NULL, NULL, BNEP_SECURITY_NONE);
+    pan_create_nap_service((uint8_t*) &service_record_item->service_record, network_packet_types, NULL, NULL, BNEP_SECURITY_NONE, PAN_NET_ACCESS_TYPE_NONE, 0, NULL, NULL);
     sdp_register_service_internal(NULL, service_record_item);
+
+    // Add data source to send packets
+    static data_source_t tap_dev_ds;
+    tap_dev_ds.fd = 0;
+    tap_dev_ds.process = process_tap_dev_data;
+    run_loop_add_data_source(&tap_dev_ds);
+
 }

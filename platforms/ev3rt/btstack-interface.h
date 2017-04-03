@@ -26,6 +26,7 @@ uint8_t/* FIXME: use bool_t*/ spp_master_test_is_connecting();
 //void btstack_initialize(const char *local_name, const char *pin_code, int rfcomm_mtu);
 extern const char   *ev3rt_bluetooth_local_name;
 extern const char   *ev3rt_bluetooth_pin_code;
+extern const int    *ev3rt_bluetooth_pan_disabled; //!< True: Disable Bluetooth PAN support, might improve real-time performance slightly
 extern const int     btstack_rfcomm_mtu;
 //extern const char   *ev3rt_bluetooth_chip_rev;
 // TODO: Add bt_init(local_name, pin_code, mtu)
