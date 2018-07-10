@@ -184,7 +184,9 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 
 		case RFCOMM_EVENT_OPEN_CHANNEL_COMPLETE:
 			// data: event(8), len(8), status (8), address (48), server channel(8), rfcomm_cid(16), max frame size(16)
+#if defined(DEBUG)
             log_error("RFCOMM_EVENT_OPEN_CHANNEL_COMPLETE connection %p", connection);
+#endif
             if (connection == SPP_MASTER_TEST_CONNECTION) {
                 if(packet[2]) log_error("RFCOMM channel open failed, status %u. WHEN SPP_MASTER_TEST_CONNECTION", packet[2]);
                 spp_master_test_channel_id  = READ_BT_16(packet, 12);

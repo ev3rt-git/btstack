@@ -41,9 +41,11 @@ static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_
                         uuid_dest   = READ_BT_16(packet, 5);
                         mtu         = READ_BT_16(packet, 7);
                         bnep_cid    = channel;
+#if defined(DEBUG)
                         //bt_flip_addr(event_addr, &packet[9]);
                         memcpy(&event_addr, &packet[9], sizeof(bd_addr_t));
                         log_error("BNEP connection open succeeded to %s source UUID 0x%04x dest UUID: 0x%04x, max frame size %u\n", bd_addr_to_str(event_addr), uuid_source, uuid_dest, mtu);
+#endif
                         /* Create the tap interface */
                         hci_local_bd_addr(local_addr);
                         // TODO: open a net I/F like tap_fd = tap_alloc(tap_dev_name, local_addr);
@@ -60,7 +62,9 @@ static void panu_packet_handler (void * connection, uint8_t packet_type, uint16_
                 /* @text BNEP_EVENT_CHANNEL_CLOSED is received when the connection gets closed.
                  */
                 case BNEP_EVENT_CHANNEL_CLOSED:
+#if defined(DEBUG)
                 	log_error("BNEP channel closed\n");
+#endif
                     bnep_cid = 0;
                     // TODO: close a net I/F
                 	// run_loop_remove_data_source(&tap_dev_ds);
@@ -120,7 +124,9 @@ uint8_t/*FIXME:use bool*/ bnep_channel_send(uint8_t *packet, uint16_t size) {
         memcpy(network_buffer2, packet, size);
         network_buffer_len2 = size; // FIXME: use mutex?
     } else {
+#if defined(DEBUG)
         log_error("%s(): buffer is not empty", __FUNCTION__);
+#endif
     }
     return 1/*use true*/;
 }
