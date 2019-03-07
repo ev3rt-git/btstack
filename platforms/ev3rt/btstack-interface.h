@@ -42,3 +42,4 @@ void bnep_channel_receive_callback(uint8_t *packet, uint16_t size);
 void btstack_db_lock();   // Lock database
 void btstack_db_unlock(); // Unlock database
 void btstack_db_append(const char *key, const char *value); // Append data, (!key) means clean entire database
+void btstack_printf(const char *format, ...);

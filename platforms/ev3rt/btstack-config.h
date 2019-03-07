@@ -19,9 +19,8 @@
 // #define ENABLE_LOG_INFO 
 #define ENABLE_LOG_ERROR
 
-// Use syslog instead of printf
-void syslog(unsigned int prio, const char *format, ...);
-#define BTSTACK_PRINTF(format, ...) syslog(3U/*LOG_ERROR*/, format, ## __VA_ARGS__)
+// Use btstack_printf instead of printf
+#define BTSTACK_PRINTF btstack_printf
 
 #define HCI_ACL_PAYLOAD_SIZE (1691+4)
 
