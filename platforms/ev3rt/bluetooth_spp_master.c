@@ -11,15 +11,16 @@ static uint16_t spp_master_test_channel_mtu = 0;
 typedef enum {
 //    SPP_MASTER_TEST,
     SPP_MASTER_IDLE,
-    SPP_MASTER_BUSY,
     SPP_MASTER_OPEN,
     SPP_MASTER_SDP,
     SPP_MASTER_DONE,
 } spp_master_state_t;
 
+static btstack_bool_t     spp_master_in_reset = 0;
 static spp_master_state_t spp_master_state = SPP_MASTER_IDLE;
 static bd_addr_t          spp_master_remote;
-static char               spp_master_pincode[17];
+static char               spp_master_pincode[BTSTACK_PIN_MAX_LEN + 1];
+static char               spp_service_name_prefix[BTSTACK_SERVICE_MAX_LEN + 1];
 
 typedef enum {
     W4_SDP_RESULT,
@@ -31,7 +32,6 @@ static state_t state = W4_SDP_RESULT;
 static uint8_t  channel_nr = 0;
 //static bd_addr_t remote = {0xD0, 0x07, 0x90, 0x49, 0xCB, 0x93};
 
-#define spp_service_name_prefix "Serial Port"
 static void handle_found_service(char * name, uint8_t port){
     log_error("APP: Service name: '%s', RFCOMM port %u\n", name, port);
 
@@ -53,7 +53,7 @@ static void handle_query_rfcomm_event(sdp_query_event_t * event, void * context)
         case SDP_QUERY_COMPLETE:
             if (state != W4_SDP_COMPLETE){
                 log_error("Requested SPP Service %s not found \n", spp_service_name_prefix);
-                spp_master_state = SPP_MASTER_IDLE;
+                spp_master_state = SPP_MASTER_OPEN;
                 break;
             }
             // connect
@@ -68,30 +68,60 @@ static void handle_query_rfcomm_event(sdp_query_event_t * event, void * context)
 
 static timer_source_t spp_master_timer;
 
-#if BD_ADDR_LEN != 6
+#if BD_ADDR_LEN != 6 || BD_ADDR_LEN != BTSTACK_BD_ADDR_LEN
 #error BD_ADDR_LEN must be 6.
 #endif
-uint8_t spp_master_test_start_connection(const uint8_t remote_addr[6], const char *pin) {
-    if (spp_master_state != SPP_MASTER_IDLE) return 0; // TODO: thread-safe
-    spp_master_state = SPP_MASTER_BUSY; // TODO: use CPU lock to remove BUSY state
-    memcpy(spp_master_remote, remote_addr, BD_ADDR_LEN);
-    strncpy(spp_master_pincode, pin, sizeof(spp_master_pincode));
-    spp_master_pincode[sizeof(spp_master_pincode) - 1] = '\0';
-    spp_master_test_channel_id = 0;
-    // FIXME: store pin code
-    spp_master_state = SPP_MASTER_OPEN;
+
+void btstack_spp_master_reset() {
+    btstack_spp_master_lock();
+    spp_master_in_reset = 1;
+
+    while (spp_master_state != SPP_MASTER_IDLE) {
+        btstack_spp_master_unlock();
+        btstack_runloop_sleep(100U);
+        btstack_spp_master_lock();
+    }
+
+    spp_master_in_reset = 0;
+    btstack_spp_master_unlock();
 }
 
-uint8_t spp_master_test_is_connecting() {
-    if (spp_master_state == SPP_MASTER_DONE || spp_master_state == SPP_MASTER_IDLE) return 0;
-    return 1;
+btstack_bool_t btstack_spp_master_connect(const uint8_t *addr, const char *pin, const char *service) {
+    btstack_bool_t ret = 0;
+    btstack_spp_master_lock();
+
+    if (spp_master_state == SPP_MASTER_IDLE) {
+        memcpy(spp_master_remote, addr, BD_ADDR_LEN);
+        strncpy(spp_master_pincode, pin, sizeof(spp_master_pincode));
+        spp_master_pincode[sizeof(spp_master_pincode) - 1] = '\0';
+        strncpy(spp_service_name_prefix, service, sizeof(spp_service_name_prefix));
+        spp_service_name_prefix[sizeof(spp_service_name_prefix) - 1] = '\0';
+        spp_master_test_channel_id = 0;
+        // FIXME: store pin code
+        spp_master_state = SPP_MASTER_OPEN;
+        ret = 1;
+    }
+
+    btstack_spp_master_unlock();
+    return ret;
 }
 
 static void spp_master_timer_handler(timer_source_t *ts) {
-    if (spp_master_state == SPP_MASTER_OPEN) {
+    btstack_spp_master_lock();
+    if (spp_master_in_reset && spp_master_state == SPP_MASTER_OPEN) {
+        spp_master_state = SPP_MASTER_IDLE;
+        btstack_spp_master_unlock();
+    } else if (spp_master_in_reset && spp_master_state == SPP_MASTER_DONE) {
+        if (spp_master_test_channel_id == 0) log_error("SPP_MASTER_DONE is already closed\n");
+        btstack_spp_master_unlock();
+        rfcomm_disconnect_internal(spp_master_test_channel_id);
+    } else if (spp_master_state == SPP_MASTER_OPEN) {
         log_error("SPP_MASTER_SDP start");
         spp_master_state = SPP_MASTER_SDP;
+        btstack_spp_master_unlock();
         sdp_query_rfcomm_channel_and_name_for_uuid(spp_master_remote, SDP_PublicBrowseGroup);
+    } else {
+        btstack_spp_master_unlock();
     }
 
 	run_loop_set_timer(ts, SPP_MASTER_TIMER_PERIOD_MS);

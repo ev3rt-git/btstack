@@ -4,6 +4,8 @@
  * Provided interface
  */
 
+typedef uint8_t btstack_bool_t;
+
 void btstack_task(intptr_t);
 void btstack_db_cache_put(const char *key, const char *value); // Put a data into database cache
 void btstack_db_cache_flush(); // Flush the database cache
@@ -16,8 +18,12 @@ uint8_t/*FIXME: use bool*/ bnep_channel_send(uint8_t *packet, uint16_t size);
 #define RFCOMM_CHANNEL_SPP_SERVER      (0)
 #define RFCOMM_CHANNEL_SPP_MASTER_TEST (1)
 
-uint8_t/* FIXME: use bool_t*/ spp_master_test_start_connection(const uint8_t addr[6], const char *pin);
-uint8_t/* FIXME: use bool_t*/ spp_master_test_is_connecting();
+#define BTSTACK_BD_ADDR_LEN     (6U)
+#define BTSTACK_PIN_MAX_LEN     (16U)
+#define BTSTACK_SERVICE_MAX_LEN (16U)
+
+void btstack_spp_master_reset();
+btstack_bool_t btstack_spp_master_connect(const uint8_t *addr, const char *pin, const char *service);
 
 /**
  * Required interface
@@ -42,4 +48,6 @@ void bnep_channel_receive_callback(uint8_t *packet, uint16_t size);
 void btstack_db_lock();   // Lock database
 void btstack_db_unlock(); // Unlock database
 void btstack_db_append(const char *key, const char *value); // Append data, (!key) means clean entire database
+void btstack_spp_master_lock();   // Lock mutex for SPP master
+void btstack_spp_master_unlock(); // Unlock mutex for SPP master
 void btstack_printf(const char *format, ...);

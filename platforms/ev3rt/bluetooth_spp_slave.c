@@ -188,11 +188,17 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
             log_error("RFCOMM_EVENT_OPEN_CHANNEL_COMPLETE connection %p", connection);
 #endif
             if (connection == SPP_MASTER_TEST_CONNECTION) {
-                if(packet[2]) log_error("RFCOMM channel open failed, status %u. WHEN SPP_MASTER_TEST_CONNECTION", packet[2]);
-                spp_master_test_channel_id  = READ_BT_16(packet, 12);
-				spp_master_test_channel_mtu = READ_BT_16(packet, 14);
-                spp_master_state = SPP_MASTER_DONE;
-				rfcomm_channel_open_callback(RFCOMM_CHANNEL_SPP_MASTER_TEST);
+                if(packet[2]) {
+                    log_error("RFCOMM channel open failed, status %u. WHEN SPP_MASTER_TEST_CONNECTION", packet[2]);
+                    spp_master_test_channel_id  = 0;
+				    spp_master_test_channel_mtu = 0;
+                    spp_master_state = SPP_MASTER_IDLE;
+                } else {
+                    spp_master_test_channel_id  = READ_BT_16(packet, 12);
+				    spp_master_test_channel_mtu = READ_BT_16(packet, 14);
+				    rfcomm_channel_open_callback(RFCOMM_CHANNEL_SPP_MASTER_TEST);
+                    spp_master_state = SPP_MASTER_DONE;
+                }
             }
             else if (packet[2]) {
 				log_error("RFCOMM channel open failed, status %u.", packet[2]);
@@ -214,6 +220,7 @@ static void packet_handler (void * connection, uint8_t packet_type, uint16_t cha
 				spp_master_test_channel_id = 0;
 				spp_master_test_channel_mtu = 0;
 				// TODO: reset state?
+                spp_master_state = SPP_MASTER_IDLE;
 			} else {
 	            rfcomm_channel_close_callback(RFCOMM_CHANNEL_SPP_SERVER);
 				send_mtu = 0;
